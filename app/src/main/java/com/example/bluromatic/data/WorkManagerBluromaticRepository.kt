@@ -36,6 +36,7 @@ import com.example.bluromatic.IMAGE_MANIPULATION_WORK_NAME
 import com.example.bluromatic.TAG_OUTPUT
 import androidx.lifecycle.asFlow
 import kotlinx.coroutines.flow.mapNotNull
+import androidx.work.Constraints
 
 class WorkManagerBluromaticRepository(context: Context) : BluromaticRepository {
 
@@ -60,11 +61,17 @@ class WorkManagerBluromaticRepository(context: Context) : BluromaticRepository {
                 OneTimeWorkRequest.from(CleanupWorker::class.java)
             )
 
+        // Add constraint to only run when batter is not low
+        val constraints = Constraints.Builder().setRequiresBatteryNotLow(true).build()
+
         // Add WorkRequest to blur the image
         val blurBuilder = OneTimeWorkRequestBuilder<BlurWorker>()
 
         // Input the Uri for the blur operation along with the blur level
         blurBuilder.setInputData(createInputDataForWorkRequest(blurLevel, imageUri))
+
+        // Add the constraint object to the blur work request
+        blurBuilder.setConstraints(constraints)
 
         continuation = continuation.then(blurBuilder.build())
 
